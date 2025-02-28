@@ -57,6 +57,9 @@ for _, row in input_data.iterrows():
         # Remove found SeqID from missing_in_input set
         missing_in_input.discard(seqid)
 
+        # Initialize stx_type_match
+        stx_type_match = "F"
+
         # Find the matching gene_id from ground truth
         ground_truth_geneid = next((gid for gid in truth_data["gene_id"] if gid.replace('_', '-') == input_gene_id.replace('_', '-')), None)
 
@@ -85,18 +88,14 @@ for _, row in input_data.iterrows():
                 allele_match = "T" if row["allele"] in truth_data["allele"] else "F"
                 accession_match = "F"
                 output_rows.append([strain, seqid, closest_match, input_gene_id, stx_type_match, stx_variant_match, allele_match, accession_match])
-
                 # Track SeqIDs where stx_type is "F"
                 if stx_type_match == "F":
                     stx_mismatch_seqids.add(seqid)
+            else:
+                stx_mismatch_seqids.add(seqid)  # Add to stx_mismatch_seqids if no closest match is found
     else:
         # Track SeqIDs not found in the ground truth
         not_found_seqids.add(seqid)
-
-# Print SeqIDs not found in the ground truth
-if not_found_seqids:
-    for seqid in not_found_seqids:
-        print(seqid)
 
 # Ensure only one match is printed for SeqIDs present only once in the ground truth
 unique_seqids = ground_truth["SeqID"].value_counts()
@@ -147,9 +146,9 @@ with open(output_file, 'a') as f:
         for seqid in not_found_seqids:
             f.write(f"{seqid}\n")
     if stx_mismatch_seqids:
-        f.write("\nSeqID(s) where stx_type is 'F':\n")
         for seqid in stx_mismatch_seqids:
-            f.write(f"{seqid}\n")
+            if seqid not in output_df["SeqID"].values:
+                f.write(f"\nstx_type is not matching and its a false one didn't use it in our accuracy calculation:{seqid}\n")
 
 # Print accuracy
 print(f"Overall Accuracy: {overall_accuracy:.2f}%")
@@ -171,8 +170,8 @@ if not_found_seqids:
     print("\nSeqID(s) not found in the ground truth data (false positives):")
     for seqid in not_found_seqids:
         print(seqid)
-# Print SeqIDs where stx_type is "F"
+# Print SeqIDs where stx_type is "F" and no match was found
 if stx_mismatch_seqids:
-    print("\nSeqID(s) where stx_type is 'F':")
     for seqid in stx_mismatch_seqids:
-        print(seqid)
+        if seqid not in output_df["SeqID"].values:
+            print("\nstx_type is not matching and its a false one didn't use it in our accuracy calculation:" + seqid)
