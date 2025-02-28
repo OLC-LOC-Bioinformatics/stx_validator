@@ -2,8 +2,8 @@ import pandas as pd
 import re
 
 # File paths
-ground_truth_file = 'real_ground_truth.csv'  # Adjust the path if necessary
-input_file = 'kma_input.csv'                # Adjust the path if necessary
+ground_truth_file = 'ground_truth.csv'  # Adjust the path if necessary
+input_file = 'kma.csv'                # Adjust the path if necessary
 output_file = 'output.csv'                  # Adjust the output path if necessary
 
 # Read input files with correct column names
